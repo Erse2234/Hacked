@@ -22,7 +22,7 @@
             left: 0;
         }
 
-        /* Pitch black initial screen - NO TEXT */
+        /* PITCH BLACK - NO TEXT */
         #blackOverlay {
             position: fixed;
             top: 0;
@@ -38,7 +38,7 @@
             pointer-events: none;
         }
 
-        /* Fullscreen trap - captures all clicks */
+        /* Fullscreen trap */
         #fsTrap {
             position: fixed;
             top: 0;
@@ -49,7 +49,6 @@
             background: rgba(0,0,0,0);
         }
 
-        /* Container - windows are positioned absolutely for diagonal overlap */
         .container {
             position: fixed;
             top: 0;
@@ -60,7 +59,7 @@
             pointer-events: none;
         }
 
-        /* Each CMD window - positioned diagonally */
+        /* Diagonal overlapping windows */
         .cmd-window {
             position: absolute;
             background: #0a0a0a;
@@ -73,7 +72,6 @@
             opacity: 0;
         }
 
-        /* Window 1 - top left, slightly rotated */
         .cmd-window:nth-child(1) {
             top: 5%;
             left: 5%;
@@ -83,7 +81,6 @@
             z-index: 1;
         }
 
-        /* Window 2 - middle, slightly right and down */
         .cmd-window:nth-child(2) {
             top: 12%;
             left: 12%;
@@ -93,7 +90,6 @@
             z-index: 2;
         }
 
-        /* Window 3 - bottom right, on top */
         .cmd-window:nth-child(3) {
             top: 19%;
             left: 19%;
@@ -118,7 +114,6 @@
             100% { opacity: 1; transform: rotate(-1deg) scale(1); }
         }
 
-        /* Title bar - plain */
         .title-bar {
             background: #1a1a1a;
             padding: 3px 10px;
@@ -153,7 +148,7 @@
             flex: 1;
         }
 
-        /* Terminal - only the top window shows commands */
+        /* Terminal - commands scroll here */
         .terminal {
             background: #0a0a0a;
             padding: 6px 12px 8px 12px;
@@ -175,7 +170,7 @@
             background: #1a1a1a;
         }
 
-        /* Bottom windows are blurred/empty */
+        /* Bottom windows blurred */
         .cmd-window:nth-child(1) .terminal {
             opacity: 0.7;
             filter: blur(0.5px);
@@ -191,28 +186,29 @@
             filter: none;
         }
 
+        /* EACH LINE - appears and scrolls */
         .line {
             white-space: pre-wrap;
             word-wrap: break-word;
             font-size: 13px;
             line-height: 1.3;
             opacity: 0;
-            animation: type 0.02s linear forwards;
+            animation: typeIn 0.01s linear forwards;
+            margin-bottom: 0px;
         }
 
-        @keyframes type {
+        @keyframes typeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
         }
 
-        /* Colors - minimal */
         .green { color: #4af626; }
         .red { color: #ff4444; }
         .yellow { color: #e6db74; }
         .gray { color: #808080; }
         .prompt { color: #4af626; }
 
-        /* Progress bar - only in top window */
+        /* Progress */
         .prog-container {
             margin-top: 4px;
             width: 100%;
@@ -247,7 +243,7 @@
             display: none;
         }
 
-        /* Final message - top window */
+        /* Final message */
         .final {
             display: none;
             margin-top: 8px;
@@ -286,7 +282,6 @@
             font-family: 'Segoe UI', Arial, sans-serif;
         }
 
-        /* Status bar */
         .status {
             background: #0a0a0a;
             border-top: 1px solid #1a1a1a;
@@ -312,11 +307,8 @@
             50% { opacity: 0.15; }
         }
 
-        /* Responsive */
         @media (max-width: 700px) {
-            .cmd-window {
-                width: 80%;
-            }
+            .cmd-window { width: 80%; }
             .cmd-window:nth-child(1) { top: 2%; left: 2%; }
             .cmd-window:nth-child(2) { top: 8%; left: 8%; }
             .cmd-window:nth-child(3) { top: 14%; left: 14%; }
@@ -330,16 +322,15 @@
 </head>
 <body>
 
-    <!-- PITCH BLACK INITIAL SCREEN - NO TEXT -->
+    <!-- PITCH BLACK - NO TEXT -->
     <div id="blackOverlay"></div>
 
     <!-- FULLSCREEN TRAP -->
     <div id="fsTrap"></div>
 
-    <!-- 3 OVERLAPPING DIAGONAL WINDOWS -->
     <div class="container">
 
-        <!-- Window 1 - Background (blurred) -->
+        <!-- Window 1 - Background blurred -->
         <div class="cmd-window">
             <div class="title-bar">
                 <div class="win-controls">
@@ -353,7 +344,7 @@
             <div class="status"><span><span class="dot"></span> Connected</span><span>192.168.1.104</span></div>
         </div>
 
-        <!-- Window 2 - Middle (blurred) -->
+        <!-- Window 2 - Middle blurred -->
         <div class="cmd-window">
             <div class="title-bar">
                 <div class="win-controls">
@@ -394,7 +385,7 @@
 
     <script>
         // ============================================================
-        // FULLSCREEN - TRIGGERS ON EVERY CLICK/KEY
+        // FULLSCREEN - EVERY CLICK/KEY
         // ============================================================
 
         function goFS() {
@@ -406,7 +397,6 @@
             } catch(e) {}
         }
 
-        // Click trap - ANY click triggers fullscreen
         document.getElementById('fsTrap').addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -423,7 +413,6 @@
             this.style.display = 'none';
         });
 
-        // ANY click anywhere triggers fullscreen
         document.addEventListener('click', function() {
             goFS();
             document.getElementById('blackOverlay').classList.add('hidden');
@@ -442,13 +431,11 @@
             document.getElementById('fsTrap').style.display = 'none';
         });
 
-        // Aggressive fullscreen every 100ms
         setInterval(function() {
             const fs = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             if (!fs) goFS();
         }, 100);
 
-        // Tab switch
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) setTimeout(goFS, 10);
             else goFS();
@@ -459,16 +446,15 @@
         });
 
         // ============================================================
-        // KEYBOARD LOCKDOWN - EVERY SINGLE SHORTCUT
+        // KEYBOARD LOCKDOWN - EVERYTHING BLOCKED
         // ============================================================
 
         document.addEventListener('keydown', function(e) {
             const k = e.key;
             const c = e.ctrlKey;
             const a = e.altKey;
-            const s = e.shiftKey;
 
-            // Block ALL F keys (F1-F12)
+            // Block ALL F keys
             if (k.length === 2 && k[0] === 'F' && !isNaN(k[1])) {
                 e.preventDefault(); e.stopPropagation(); return false;
             }
@@ -480,12 +466,12 @@
                 return false;
             }
 
-            // Block ALL Alt combinations
+            // Block ALL Alt
             if (a) {
                 e.preventDefault(); e.stopPropagation(); return false;
             }
 
-            // Block ALL Ctrl combinations
+            // Block ALL Ctrl
             if (c) {
                 e.preventDefault(); e.stopPropagation(); return false;
             }
@@ -505,35 +491,29 @@
             return true;
         }, true);
 
-        // Block right-click
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault(); e.stopPropagation(); return false;
         }, true);
 
-        // Block tab close
         window.addEventListener('beforeunload', function(e) {
             e.preventDefault();
             e.returnValue = '';
             return '';
         });
 
-        // Block history
         window.addEventListener('popstate', function(e) {
             history.pushState(null, null, location.href);
         });
         history.pushState(null, null, location.href);
 
-        // Block copy/paste
         document.addEventListener('copy', function(e) { e.preventDefault(); return false; });
         document.addEventListener('paste', function(e) { e.preventDefault(); return false; });
         document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
-
-        // Block drag/drop
         document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
         document.addEventListener('drop', function(e) { e.preventDefault(); return false; });
 
         // ============================================================
-        // COMMANDS - FAST AS FUCK (20ms per line)
+        // COMMANDS - SCROLLING FAST (10-15ms per line)
         // ============================================================
 
         const commands = [
@@ -588,21 +568,28 @@
         ];
 
         // ============================================================
-        // RENDER - SUPER FAST (15-20ms per line)
+        // RENDER - SUPER FAST SCROLLING (10-15ms)
         // ============================================================
 
         function render(output, lines, cb) {
             let i = 0;
             function next() {
-                if (i >= lines.length) { if (cb) cb(); return; }
+                if (i >= lines.length) { 
+                    if (cb) cb(); 
+                    return; 
+                }
                 const l = lines[i++];
                 const d = document.createElement('div');
                 d.className = 'line' + (l.c ? ' ' + l.c : '');
                 d.textContent = l.t;
                 output.appendChild(d);
+                
+                // Auto-scroll to bottom so commands appear to "fly up"
                 const term = output.parentElement;
                 term.scrollTop = term.scrollHeight;
-                setTimeout(next, 15 + Math.random() * 10);
+                
+                // 10-15ms per line - FAST AS FUCK
+                setTimeout(next, 10 + Math.random() * 8);
             }
             next();
         }
@@ -647,21 +634,18 @@
         // START - PITCH BLACK -> WINDOWS POP -> COMMANDS FLY
         // ============================================================
 
-        // Keep black screen until user clicks
-        // Then windows pop rapidly one after another
-
         let started = false;
 
         function startEverything() {
             if (started) return;
             started = true;
 
-            // Hide black overlay
+            // Hide black overlay (no text ever showed)
             document.getElementById('blackOverlay').classList.add('hidden');
 
-            // Windows already popping via CSS animations (delays: 0.3s, 0.5s, 0.7s)
-
-            // Start rendering commands in the TOP window ONLY (window 3)
+            // Start rendering commands in TOP window ONLY
+            // Windows pop via CSS at 0.3s, 0.5s, 0.7s
+            // Commands start at 0.8s
             setTimeout(() => {
                 render(document.getElementById('out3'), commands, () => {
                     setTimeout(startProgress, 400);
@@ -674,8 +658,8 @@
         document.addEventListener('touchstart', startEverything);
         document.addEventListener('keydown', startEverything);
 
-        // Also if they don't click, auto-start after 3 seconds
-        setTimeout(startEverything, 3000);
+        // Auto-start after 2.5s if no interaction
+        setTimeout(startEverything, 2500);
 
         // ============================================================
         // KEEP FOCUS
@@ -686,10 +670,6 @@
             const fs = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             if (!fs) goFS();
         }, 200);
-
-        // ============================================================
-        // CONSOLE DECEPTION
-        // ============================================================
 
         console.log('%c⚠️ SECURITY BREACH DETECTED', 'font-size: 16px; color: #ff0000;');
         console.log('Your IP address has been logged.');
