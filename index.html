@@ -3,445 +3,668 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚠️ SECURITY BREACH DETECTED</title>
+    <title>Windows Command Processor</title>
     <style>
-        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
         }
 
-        body {
-            background-color: #000000;
-            color: #00ff41;
-            font-family: 'Courier New', monospace;
-            height: 100vh;
+        html, body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            cursor: none;
-        }
-
-        /* Green scanline overlay effect */
-        body::before {
-            content: '';
+            background: #000000;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 255, 65, 0.03) 0px,
-                rgba(0, 255, 65, 0.03) 2px,
-                transparent 2px,
-                transparent 4px
-            );
-            pointer-events: none;
-            z-index: 1000;
         }
 
-        /* Glitch effect overlay */
-        body::after {
-            content: '';
+        /* Initial black screen */
+        #blackOverlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 255, 65, 0.02);
-            pointer-events: none;
-            z-index: 999;
-            animation: glitchOverlay 0.3s infinite;
-        }
-
-        @keyframes glitchOverlay {
-            0% { opacity: 0; }
-            50% { opacity: 0.3; }
-            100% { opacity: 0; }
-        }
-
-        .container {
+            width: 100vw;
+            height: 100vh;
+            background: #000000;
+            z-index: 999999;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            padding: 20px;
-            position: relative;
+            transition: opacity 0.3s;
         }
-
-        /* Main warning text */
-        .warning {
-            text-align: center;
-            animation: pulse 1.5s ease-in-out infinite;
-            z-index: 10;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .warning h1 {
-            font-size: 4rem;
-            color: #ff0000;
-            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 80px #ff0000;
-            margin-bottom: 20px;
-            animation: textFlicker 3s infinite;
-        }
-
-        @keyframes textFlicker {
-            0%, 100% { opacity: 1; }
-            3% { opacity: 0.5; }
-            6% { opacity: 1; }
-            7% { opacity: 0.3; }
-            8% { opacity: 1; }
-            50% { opacity: 1; }
-            53% { opacity: 0.2; }
-            56% { opacity: 1; }
-        }
-
-        .warning .subtitle {
-            font-size: 1.8rem;
-            color: #ff3333;
-            text-shadow: 0 0 10px #ff0000;
-            margin-bottom: 40px;
-        }
-
-        /* Terminal-like text box */
-        .terminal {
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #00ff41;
-            border-radius: 8px;
-            padding: 30px;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2), inset 0 0 30px rgba(0, 255, 65, 0.05);
-            position: relative;
-            z-index: 10;
-        }
-
-        .terminal .line {
-            font-size: 1.1rem;
-            padding: 3px 0;
+        #blackOverlay.hidden {
             opacity: 0;
-            animation: typeIn 0.5s forwards;
-            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        #blackOverlay span {
+            color: #333;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        /* Fullscreen click trap */
+        #fullscreenTrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999998;
+            background: rgba(0,0,0,0);
+            cursor: pointer;
+        }
+
+        /* Main container - 3 windows stacked */
+        .container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 92%;
+            max-width: 920px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            opacity: 0;
+            animation: appear 0.2s forwards;
+            animation-delay: 0.6s;
+            z-index: 10;
+        }
+
+        @keyframes appear {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Each CMD window */
+        .cmd-window {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
             overflow: hidden;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.9);
+            animation: pop 0.12s ease-out forwards;
+            opacity: 0;
         }
 
-        /* Staggered typing animation delays */
-        .line:nth-child(1) { animation-delay: 0.5s; }
-        .line:nth-child(2) { animation-delay: 1.5s; }
-        .line:nth-child(3) { animation-delay: 2.5s; }
-        .line:nth-child(4) { animation-delay: 3.5s; }
-        .line:nth-child(5) { animation-delay: 4.5s; }
-        .line:nth-child(6) { animation-delay: 5.5s; }
-        .line:nth-child(7) { animation-delay: 6.5s; }
-        .line:nth-child(8) { animation-delay: 7.5s; }
-        .line:nth-child(9) { animation-delay: 8.5s; }
-        .line:nth-child(10) { animation-delay: 9.5s; }
-        .line:nth-child(11) { animation-delay: 10.5s; }
-        .line:nth-child(12) { animation-delay: 11.5s; }
-        .line:nth-child(13) { animation-delay: 12.5s; }
+        .cmd-window:nth-child(1) { animation-delay: 0.6s; }
+        .cmd-window:nth-child(2) { animation-delay: 0.8s; }
+        .cmd-window:nth-child(3) { animation-delay: 1.0s; }
 
-        @keyframes typeIn {
-            0% {
-                opacity: 0;
-                width: 0;
-            }
-            100% {
-                opacity: 1;
-                width: 100%;
-            }
+        @keyframes pop {
+            0% { opacity: 0; transform: scale(0.97); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
-        .terminal .blink {
-            animation: blink 1s step-end infinite;
+        /* Windows title bar - exact replica */
+        .title-bar {
+            background: #1a1a1a;
+            padding: 3px 10px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            min-height: 24px;
+            cursor: default;
+        }
+
+        .win-controls {
+            display: flex;
+            gap: 5px;
+            margin-right: 10px;
+        }
+
+        .win-btn {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        .win-btn.close { background: #e74c3c; }
+        .win-btn.min { background: #f1c40f; }
+        .win-btn.max { background: #2ecc71; }
+
+        .title-text {
+            color: #c0c0c0;
+            font-size: 11px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            flex: 1;
+        }
+
+        /* Terminal output */
+        .terminal {
+            background: #0a0a0a;
+            padding: 6px 12px 8px 12px;
+            font-family: 'Consolas', 'Lucida Console', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.3;
+            color: #c0c0c0;
+            max-height: 170px;
+            min-height: 75px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .terminal::-webkit-scrollbar {
+            width: 4px;
+            background: #0a0a0a;
+        }
+        .terminal::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+        }
+
+        .line {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 13px;
+            line-height: 1.3;
+            opacity: 0;
+            animation: type 0.02s linear forwards;
+        }
+
+        @keyframes type {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Colors - minimal */
+        .green { color: #4af626; }
+        .red { color: #ff4444; }
+        .yellow { color: #e6db74; }
+        .gray { color: #808080; }
+        .prompt { color: #4af626; }
+
+        /* Progress bar - plain */
+        .prog-container {
+            margin-top: 4px;
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            padding: 1px;
+            display: none;
+        }
+
+        .prog-bar {
+            height: 14px;
+            background: #4af626;
+            width: 0%;
+            animation: fill 12s ease-in-out forwards;
+        }
+
+        @keyframes fill {
+            0% { width: 0%; }
+            20% { width: 14%; }
+            40% { width: 32%; }
+            60% { width: 52%; }
+            80% { width: 76%; }
+            95% { width: 94%; }
+            100% { width: 100%; }
+        }
+
+        .prog-label {
+            color: #666;
+            font-size: 11px;
+            font-family: 'Consolas', monospace;
+            margin-top: 2px;
+            display: none;
+        }
+
+        /* Final message - simple */
+        .final {
+            display: none;
+            margin-top: 8px;
+            padding: 8px;
+            border: 1px solid #ff0000;
+            background: #0a0000;
+            text-align: center;
+        }
+
+        .final.show {
+            display: block;
+            animation: fadeMsg 0.4s ease;
+        }
+
+        @keyframes fadeMsg {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .final .big {
+            color: #ff0000;
+            font-size: 22px;
+            font-weight: bold;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        .final .skulls {
+            font-size: 30px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .final .sub {
+            color: #883333;
+            font-size: 12px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        /* Status bar */
+        .status {
+            background: #0a0a0a;
+            border-top: 1px solid #1a1a1a;
+            padding: 2px 12px;
+            font-size: 11px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            display: inline-block;
+            background: #4af626;
+            animation: blink 1.2s infinite;
         }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+            50% { opacity: 0.15; }
         }
 
-        .terminal .highlight-red {
-            color: #ff0000;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-        }
-
-        .terminal .highlight-yellow {
-            color: #ffff00;
-            text-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
-        }
-
-        .terminal .highlight-cyan {
-            color: #00ffff;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-
-        /* Progress bar (fake) */
-        .progress-container {
-            margin-top: 25px;
-            width: 100%;
-            background: rgba(0, 255, 65, 0.1);
-            border: 1px solid #00ff41;
-            border-radius: 4px;
-            padding: 2px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .progress-bar {
-            height: 20px;
-            background: #00ff41;
-            width: 0%;
-            animation: progressFill 20s linear forwards;
-            border-radius: 2px;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
-        }
-
-        @keyframes progressFill {
-            0% { width: 0%; }
-            20% { width: 15%; }
-            40% { width: 35%; }
-            60% { width: 60%; }
-            80% { width: 85%; }
-            95% { width: 98%; }
-            100% { width: 100%; }
-        }
-
-        .progress-label {
-            color: #00ff41;
-            text-align: center;
-            margin-top: 8px;
-            font-size: 0.9rem;
-            z-index: 10;
-            position: relative;
-        }
-
-        /* Random glitch text that appears and disappears */
-        .glitch-text {
-            position: fixed;
-            color: #ff0000;
-            font-size: 0.8rem;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 50;
-            animation: glitchPop 2s infinite;
-        }
-
-        .glitch-text:nth-child(1) { top: 10%; left: 5%; animation-delay: 0.5s; }
-        .glitch-text:nth-child(2) { top: 20%; right: 8%; animation-delay: 2.3s; }
-        .glitch-text:nth-child(3) { bottom: 30%; left: 3%; animation-delay: 4.7s; }
-        .glitch-text:nth-child(4) { bottom: 15%; right: 5%; animation-delay: 1.1s; }
-        .glitch-text:nth-child(5) { top: 50%; left: 2%; animation-delay: 3.8s; }
-        .glitch-text:nth-child(6) { top: 60%; right: 3%; animation-delay: 0.9s; }
-
-        @keyframes glitchPop {
-            0%, 100% { opacity: 0; transform: translate(0, 0); }
-            10% { opacity: 0.8; transform: translate(-5px, 2px); }
-            15% { opacity: 0; transform: translate(5px, -2px); }
-        }
-
-        /* Scary footer */
-        .footer {
-            margin-top: 30px;
-            color: #00ff41;
-            font-size: 0.8rem;
-            opacity: 0.6;
-            text-align: center;
-            z-index: 10;
-            position: relative;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* Screen shake effect */
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            10% { transform: translate(-5px, 5px) rotate(-1deg); }
-            20% { transform: translate(5px, -5px) rotate(1deg); }
-            30% { transform: translate(-3px, 3px) rotate(0deg); }
-            40% { transform: translate(3px, -3px) rotate(0deg); }
-            50% { transform: translate(-5px, 5px) rotate(-1deg); }
-            60% { transform: translate(5px, -5px) rotate(1deg); }
-            70% { transform: translate(-3px, 3px) rotate(0deg); }
-            80% { transform: translate(3px, -3px) rotate(0deg); }
-            90% { transform: translate(-5px, 5px) rotate(-1deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
-
-        .shake {
-            animation: shake 0.3s ease-in-out 5;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .warning h1 {
-                font-size: 2.5rem;
-            }
-            .warning .subtitle {
-                font-size: 1.2rem;
-            }
-            .terminal .line {
-                font-size: 0.8rem;
-                white-space: normal;
-            }
-        }
-
-        /* Fullscreen click/tap message */
-        .fullscreen-hint {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(0, 255, 65, 0.3);
-            font-size: 0.7rem;
-            z-index: 1001;
-            animation: pulse 3s ease-in-out infinite;
-            cursor: pointer;
-        }
-
-        /* Hidden message after "decryption" */
-        .hidden-message {
-            display: none;
-            color: #00ff41;
-            font-size: 2rem;
-            text-align: center;
-            margin-top: 20px;
-            animation: pulse 1s ease-in-out infinite;
-        }
-
-        .hidden-message.show {
-            display: block;
+        @media (max-width: 700px) {
+            .container { width: 98%; gap: 4px; }
+            .terminal { font-size: 11px; padding: 4px 8px 6px 8px; max-height: 130px; min-height: 55px; }
+            .line { font-size: 11px; }
+            .title-text { font-size: 10px; }
+            .final .big { font-size: 17px; }
+            .final .skulls { font-size: 22px; }
         }
     </style>
 </head>
 <body>
-    <!-- Glitch text overlays -->
-    <div class="glitch-text">⚠️ SYS_CRITICAL</div>
-    <div class="glitch-text">🔒 ENCRYPTED</div>
-    <div class="glitch-text">💀 ROOTKIT</div>
-    <div class="glitch-text">📡 EXFIL</div>
-    <div class="glitch-text">🔥 FIREWALL_DOWN</div>
-    <div class="glitch-text">⚡ BACKDOOR</div>
 
+    <!-- BLACK OVERLAY -->
+    <div id="blackOverlay"><span>▌ Loading Windows components... ▌</span></div>
+
+    <!-- FULLSCREEN TRAP -->
+    <div id="fullscreenTrap"></div>
+
+    <!-- 3 WINDOWS -->
     <div class="container">
-        <div class="warning">
-            <h1>⚠️ SECURITY BREACH</h1>
-            <div class="subtitle">YOUR SYSTEM HAS BEEN COMPROMISED</div>
+
+        <!-- Window 1 -->
+        <div class="cmd-window">
+            <div class="title-bar">
+                <div class="win-controls">
+                    <span class="win-btn close"></span>
+                    <span class="win-btn min"></span>
+                    <span class="win-btn max"></span>
+                </div>
+                <div class="title-text">C:\Windows\system32\cmd.exe</div>
+            </div>
+            <div class="terminal" id="term1"><div id="out1"></div></div>
+            <div class="status"><span><span class="dot"></span> Connected</span><span>192.168.1.104</span></div>
         </div>
 
-        <div class="terminal" id="terminal">
-            <div class="line">> INITIALIZING FORENSIC SCAN...</div>
-            <div class="line">> DETECTED: <span class="highlight-red">UNAUTHORIZED ACCESS</span></div>
-            <div class="line">> TRACING IP: <span class="highlight-yellow">192.168.1.45</span> → <span class="highlight-red">!!! TARGET LOCKED !!!</span></div>
-            <div class="line">> LOCATION: <span class="highlight-cyan">[REDACTED - ENCRYPTED]</span></div>
-            <div class="line">> IDENTIFIED: <span class="highlight-red">SCAMMER DETECTED</span></div>
-            <div class="line">> ACCESSING: <span class="highlight-yellow">CAMERA • MICROPHONE • FILES</span></div>
-            <div class="line">> EXFILTRATING DATA... <span class="highlight-red">PROGRESS: 47%</span></div>
-            <div class="line">> <span class="highlight-red">⚠️ RANSOMWARE DEPLOYED</span></div>
-            <div class="line">> ENCRYPTING DRIVE C:... <span class="highlight-yellow">█▓▒░ 64%</span></div>
-            <div class="line">> <span class="highlight-red">!!! BACKDOOR ACTIVATED !!!</span></div>
-            <div class="line">> REMOTE ACCESS: <span class="highlight-cyan">ESTABLISHED</span></div>
-            <div class="line">> <span class="highlight-yellow">YOU HAVE BEEN HACKED</span> <span class="blink">█</span></div>
+        <!-- Window 2 -->
+        <div class="cmd-window">
+            <div class="title-bar">
+                <div class="win-controls">
+                    <span class="win-btn close"></span>
+                    <span class="win-btn min"></span>
+                    <span class="win-btn max"></span>
+                </div>
+                <div class="title-text">Administrator: C:\Windows\system32\cmd.exe</div>
+            </div>
+            <div class="terminal" id="term2"><div id="out2"></div></div>
+            <div class="status"><span><span class="dot"></span> Connected</span><span>10.0.0.5</span></div>
         </div>
 
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
+        <!-- Window 3 -->
+        <div class="cmd-window">
+            <div class="title-bar">
+                <div class="win-controls">
+                    <span class="win-btn close"></span>
+                    <span class="win-btn min"></span>
+                    <span class="win-btn max"></span>
+                </div>
+                <div class="title-text">Administrator: C:\Windows\system32\cmd.exe</div>
+            </div>
+            <div class="terminal" id="term3">
+                <div id="out3"></div>
+                <div class="prog-container" id="progBox"><div class="prog-bar" id="progBar"></div></div>
+                <div class="prog-label" id="progLabel">Processing... 0%</div>
+                <div class="final" id="finalMsg">
+                    <div class="big">GGS BRO YOU ARE COOKED</div>
+                    <span class="skulls">💀💀</span>
+                    <div class="sub">Your system has been compromised.</div>
+                </div>
+            </div>
+            <div class="status"><span><span class="dot" style="background:#ff0000;animation-duration:0.3s;"></span> <span id="statusText" style="color:#ff0000;">COMPROMISED</span></span><span>185.165.29.101</span></div>
         </div>
-        <div class="progress-label">▶ DECRYPTING YOUR FILES... PLEASE DO NOT TURN OFF YOUR PC</div>
 
-        <div class="hidden-message" id="hiddenMessage">
-            🎯 GOTCHA!<br>
-            <span style="font-size: 1rem; color: #00ff41;">You just got played. 👋</span>
-        </div>
-
-        <div class="footer">
-            ⚡ SYSTEM LOCKED • DO NOT CLOSE THIS WINDOW • YOUR ACTIVITY IS BEING LOGGED ⚡
-        </div>
     </div>
 
-    <div class="fullscreen-hint">[ CLICK ANYWHERE TO FULLSCREEN ]</div>
-
     <script>
-        // Fullscreen on click
-        document.addEventListener('click', function() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            }
-            // Also trigger the shake
-            document.querySelector('.container').classList.add('shake');
-            setTimeout(() => {
-                document.querySelector('.container').classList.remove('shake');
-            }, 1500);
-        });
+        // ============================================================
+        // FORCE FULLSCREEN - ACTUALLY WORKS
+        // ============================================================
 
-        // Progress bar - when complete, show hidden message
-        const progressBar = document.getElementById('progressBar');
-        const hiddenMessage = document.getElementById('hiddenMessage');
+        let fullscreenLocked = false;
+        let fsAttempts = 0;
 
-        progressBar.addEventListener('animationend', function() {
-            hiddenMessage.classList.add('show');
-            // Also play a sound effect vibe - flash the screen
-            document.body.style.backgroundColor = '#001100';
-            setTimeout(() => {
-                document.body.style.backgroundColor = '#000000';
-            }, 500);
-        });
+        function goFullscreen() {
+            const d = document.documentElement;
+            try {
+                if (d.requestFullscreen) d.requestFullscreen();
+                else if (d.webkitRequestFullscreen) d.webkitRequestFullscreen();
+                else if (d.msRequestFullscreen) d.msRequestFullscreen();
+                fsAttempts++;
+            } catch(e) {}
+        }
 
-        // Random glitch effect - flash the screen occasionally
-        setInterval(() => {
-            if (Math.random() < 0.1) {
-                document.body.style.backgroundColor = '#ff0000';
-                setTimeout(() => {
-                    document.body.style.backgroundColor = '#000000';
-                }, 100);
-            }
-        }, 3000);
-
-        // Prevent right-click context menu
-        document.addEventListener('contextmenu', function(e) {
+        // Click handler for fullscreen trap
+        document.getElementById('fullscreenTrap').addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
+            goFullscreen();
+            document.getElementById('blackOverlay').classList.add('hidden');
+            this.style.display = 'none';
         });
 
-        // Prevent Ctrl+U (view source)
+        document.getElementById('fullscreenTrap').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goFullscreen();
+            document.getElementById('blackOverlay').classList.add('hidden');
+            this.style.display = 'none';
+        });
+
+        // Global click handler
+        document.addEventListener('click', function() {
+            goFullscreen();
+            document.getElementById('blackOverlay').classList.add('hidden');
+            document.getElementById('fullscreenTrap').style.display = 'none';
+        });
+
+        document.addEventListener('touchstart', function() {
+            goFullscreen();
+            document.getElementById('blackOverlay').classList.add('hidden');
+            document.getElementById('fullscreenTrap').style.display = 'none';
+        });
+
+        document.addEventListener('keydown', function() {
+            goFullscreen();
+            document.getElementById('blackOverlay').classList.add('hidden');
+            document.getElementById('fullscreenTrap').style.display = 'none';
+        });
+
+        // Aggressive check every 200ms
+        setInterval(function() {
+            const fs = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (!fs && fsAttempts < 50) {
+                goFullscreen();
+            }
+        }, 200);
+
+        // On tab switch
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                setTimeout(goFullscreen, 20);
+            } else {
+                goFullscreen();
+            }
+        });
+
+        window.addEventListener('blur', function() {
+            setTimeout(goFullscreen, 20);
+        });
+
+        // ============================================================
+        // KEYBOARD LOCKDOWN - COMPLETE
+        // ============================================================
+
         document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
-                e.preventDefault();
+            const k = e.key;
+            const c = e.ctrlKey;
+            const a = e.altKey;
+            const s = e.shiftKey;
+
+            // Block ALL F keys
+            if (k.length === 2 && k[0] === 'F' && !isNaN(k[1])) {
+                e.preventDefault(); e.stopPropagation(); return false;
+            }
+
+            // Block Escape
+            if (k === 'Escape') {
+                e.preventDefault(); e.stopPropagation();
+                goFullscreen();
                 return false;
             }
-            // Prevent F12
-            if (e.key === 'F12') {
-                e.preventDefault();
+
+            // Block Alt combos
+            if (a) {
+                if (['F4', 'Tab', ' ', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(k)) {
+                    e.preventDefault(); e.stopPropagation(); return false;
+                }
+            }
+
+            // Block Ctrl combos
+            if (c) {
+                if (['w','W','t','T','Tab','u','U','s','S','r','R','n','N'].includes(k)) {
+                    e.preventDefault(); e.stopPropagation(); return false;
+                }
+                if (s && ['i','I','j','J','c','C','Tab','Escape'].includes(k)) {
+                    e.preventDefault(); e.stopPropagation(); return false;
+                }
+            }
+
+            // Block Windows key
+            if (k === 'Meta') {
+                e.preventDefault(); e.stopPropagation(); return false;
+            }
+
+            // Block F11
+            if (k === 'F11') {
+                e.preventDefault(); e.stopPropagation();
+                goFullscreen();
                 return false;
             }
+
+            return true;
+        }, true);
+
+        // Block right-click
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault(); e.stopPropagation(); return false;
+        }, true);
+
+        // Block tab close
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
         });
 
-        console.log('%c⚠️ HACKED! ⚠️', 'font-size: 40px; color: red; font-weight: bold;');
-        console.log('%cYou fell for it! 😂', 'font-size: 24px; color: #00ff41;');
+        // Block history
+        window.addEventListener('popstate', function(e) {
+            history.pushState(null, null, location.href);
+        });
+        history.pushState(null, null, location.href);
 
-        // Make the warning text extra scary with random character replacements
-        const warningTitle = document.querySelector('.warning h1');
-        const originalText = warningTitle.textContent;
-        const glitchChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/';
+        // Block copy/paste
+        document.addEventListener('copy', function(e) { e.preventDefault(); return false; });
+        document.addEventListener('paste', function(e) { e.preventDefault(); return false; });
+        document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
+
+        // ============================================================
+        // COMMAND LINES
+        // ============================================================
+
+        // Window 1 - System info
+        const cmd1 = [
+            { t: 'Microsoft Windows [Version 10.0.19044.1826]' },
+            { t: '' },
+            { t: 'Microsoft Corporation. All rights reserved.' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>whoami', c: 'prompt' },
+            { t: 'win10\\administrator' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>hostname', c: 'prompt' },
+            { t: 'DESKTOP-7F3K2M1' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>ipconfig /all | findstr "IPv4"', c: 'prompt' },
+            { t: '   IPv4 Address. . . . . . . . . . . : 192.168.1.104' },
+            { t: '   IPv4 Address. . . . . . . . . . . : 10.0.0.5' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>systeminfo | findstr /C:"OS Name" /C:"Total Physical Memory"', c: 'prompt' },
+            { t: 'OS Name:           Microsoft Windows 10 Pro' },
+            { t: 'Total Physical Memory: 16,384 MB' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>', c: 'prompt' },
+        ];
+
+        // Window 2 - Network
+        const cmd2 = [
+            { t: 'C:\\Windows\\system32>netsh wlan show profiles', c: 'prompt' },
+            { t: '    Profile: "HOME-WIFI-5G"' },
+            { t: '    Profile: "OFFICE-GUEST"' },
+            { t: '    Profile: "NEIGHBOR-2.4G"' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>wmic useraccount get name,sid', c: 'prompt' },
+            { t: 'Admin  S-1-5-21-1275210071-1715567821-725345543-500' },
+            { t: 'Guest  S-1-5-21-1275210071-1715567821-725345543-501' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>tasklist /FI "IMAGENAME eq explorer.exe" /FO TABLE', c: 'prompt' },
+            { t: 'explorer.exe   8724 Console  1  1,384,288 K' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>netstat -an | findstr "ESTABLISHED"', c: 'prompt' },
+            { t: 'TCP    192.168.1.104:49156   185.165.29.101:443   ESTABLISHED' },
+            { t: 'TCP    192.168.1.104:49157   185.165.29.101:443   ESTABLISHED' },
+            { t: 'TCP    192.168.1.104:49158   185.165.29.101:443   ESTABLISHED' },
+            { t: '' },
+            { t: 'WARNING: Multiple outbound connections detected on port 443', c: 'red' },
+            { t: 'Possible data exfiltration in progress', c: 'red' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>', c: 'prompt' },
+        ];
+
+        // Window 3 - Action
+        const cmd3 = [
+            { t: 'C:\\Windows\\system32>netsh advfirewall firewall add rule name="BlockOutbound" dir=out action=block remoteip=185.165.29.101', c: 'prompt' },
+            { t: 'Ok.', c: 'green' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>ping 185.165.29.101 -n 2', c: 'prompt' },
+            { t: 'Pinging 185.165.29.101 with 32 bytes of data:' },
+            { t: 'Request timed out.' },
+            { t: 'Request timed out.' },
+            { t: 'Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)' },
+            { t: '' },
+            { t: 'Outbound connection blocked successfully', c: 'green' },
+            { t: 'System integrity verified', c: 'green' },
+            { t: 'All unauthorized access attempts terminated', c: 'green' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>', c: 'prompt' },
+        ];
+
+        // ============================================================
+        // RENDER - FAST AS FUCK
+        // ============================================================
+
+        function render(output, lines, cb) {
+            let i = 0;
+            function next() {
+                if (i >= lines.length) { if (cb) cb(); return; }
+                const l = lines[i++];
+                const d = document.createElement('div');
+                d.className = 'line' + (l.c ? ' ' + l.c : '');
+                d.textContent = l.t;
+                output.appendChild(d);
+                const term = output.parentElement;
+                term.scrollTop = term.scrollHeight;
+                // 20-30ms per line - FAST
+                setTimeout(next, 20 + Math.random() * 15);
+            }
+            next();
+        }
+
+        // ============================================================
+        // PROGRESS & FINAL
+        // ============================================================
+
+        function startProgress() {
+            const box = document.getElementById('progBox');
+            const label = document.getElementById('progLabel');
+            box.style.display = 'block';
+            label.style.display = 'block';
+
+            const steps = [
+                { p: 5, d: 1000, l: 'Accessing encrypted files... 5%' },
+                { p: 20, d: 2500, l: 'Exfiltrating data... 20%' },
+                { p: 38, d: 4000, l: 'Establishing persistence... 38%' },
+                { p: 58, d: 5500, l: 'Deploying backdoor... 58%' },
+                { p: 78, d: 7000, l: 'Encrypting drives... 78%' },
+                { p: 95, d: 8500, l: 'Finalizing... 95%' },
+                { p: 100, d: 10000, l: 'System compromised.' },
+            ];
+
+            steps.forEach(s => {
+                setTimeout(() => {
+                    label.textContent = s.l;
+                    if (s.p === 100) {
+                        setTimeout(() => {
+                            document.getElementById('finalMsg').classList.add('show');
+                            document.getElementById('statusText').textContent = 'COMPROMISED';
+                            document.getElementById('statusText').style.color = '#ff0000';
+                            document.body.style.background = '#0a0000';
+                            setTimeout(() => document.body.style.background = '#000000', 200);
+                        }, 300);
+                    }
+                }, s.d);
+            });
+        }
+
+        // ============================================================
+        // START
+        // ============================================================
+
+        // Hide black overlay after 1.5s
+        setTimeout(() => {
+            document.getElementById('blackOverlay').classList.add('hidden');
+        }, 1500);
+
+        // Render all 3 windows with delays
+        setTimeout(() => render(document.getElementById('out1'), cmd1), 100);
+        setTimeout(() => render(document.getElementById('out2'), cmd2), 300);
+        setTimeout(() => {
+            render(document.getElementById('out3'), cmd3, () => {
+                setTimeout(startProgress, 400);
+            });
+        }, 500);
+
+        // ============================================================
+        // KEEP FOCUS
+        // ============================================================
 
         setInterval(() => {
-            if (Math.random() < 0.05) {
-                let newText = '';
-                for (let i = 0; i < originalText.length; i++) {
-                    if (Math.random() < 0.2) {
-                        newText += glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                    } else {
-                        newText += originalText[i];
-                    }
-                }
-                warningTitle.textContent = newText;
-                setTimeout(() => {
-                    warningTitle.textContent = originalText;
-                }, 200);
-            }
-        }, 1000);
+            window.focus();
+            const fs = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (!fs) goFullscreen();
+        }, 500);
+
+        // Console deception
+        console.log('%c⚠️ SECURITY BREACH DETECTED', 'font-size: 16px; color: #ff0000;');
+        console.log('Your IP address has been logged.');
     </script>
 </body>
 </html>
