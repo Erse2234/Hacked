@@ -59,7 +59,7 @@
             pointer-events: none;
         }
 
-        /* Diagonal overlapping windows */
+        /* Straight windows - NO SLANT */
         .cmd-window {
             position: absolute;
             background: #0a0a0a;
@@ -75,7 +75,6 @@
         .cmd-window:nth-child(1) {
             top: 5%;
             left: 5%;
-            transform: rotate(-2deg);
             animation: pop1 0.15s ease-out forwards;
             animation-delay: 0.3s;
             z-index: 1;
@@ -84,7 +83,6 @@
         .cmd-window:nth-child(2) {
             top: 12%;
             left: 12%;
-            transform: rotate(1deg);
             animation: pop2 0.15s ease-out forwards;
             animation-delay: 0.5s;
             z-index: 2;
@@ -93,25 +91,24 @@
         .cmd-window:nth-child(3) {
             top: 19%;
             left: 19%;
-            transform: rotate(-1deg);
             animation: pop3 0.15s ease-out forwards;
             animation-delay: 0.7s;
             z-index: 3;
         }
 
         @keyframes pop1 {
-            0% { opacity: 0; transform: rotate(-2deg) scale(0.92); }
-            100% { opacity: 1; transform: rotate(-2deg) scale(1); }
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         @keyframes pop2 {
-            0% { opacity: 0; transform: rotate(1deg) scale(0.92); }
-            100% { opacity: 1; transform: rotate(1deg) scale(1); }
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         @keyframes pop3 {
-            0% { opacity: 0; transform: rotate(-1deg) scale(0.92); }
-            100% { opacity: 1; transform: rotate(-1deg) scale(1); }
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         .title-bar {
@@ -148,7 +145,6 @@
             flex: 1;
         }
 
-        /* Terminal - commands scroll here */
         .terminal {
             background: #0a0a0a;
             padding: 6px 12px 8px 12px;
@@ -186,7 +182,6 @@
             filter: none;
         }
 
-        /* EACH LINE - appears and scrolls */
         .line {
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -208,7 +203,6 @@
         .gray { color: #808080; }
         .prompt { color: #4af626; }
 
-        /* Progress */
         .prog-container {
             margin-top: 4px;
             width: 100%;
@@ -243,7 +237,6 @@
             display: none;
         }
 
-        /* Final message */
         .final {
             display: none;
             margin-top: 8px;
@@ -513,7 +506,7 @@
         document.addEventListener('drop', function(e) { e.preventDefault(); return false; });
 
         // ============================================================
-        // COMMANDS - SCROLLING FAST (10-15ms per line)
+        // COMMANDS - LOTS OF SCROLLING TEXT (8-12ms per line)
         // ============================================================
 
         const commands = [
@@ -527,38 +520,94 @@
             { t: 'C:\\Windows\\system32>hostname', c: 'prompt' },
             { t: 'DESKTOP-7F3K2M1' },
             { t: '' },
-            { t: 'C:\\Windows\\system32>ipconfig /all | findstr "IPv4"', c: 'prompt' },
+            { t: 'C:\\Windows\\system32>ipconfig /all', c: 'prompt' },
+            { t: '' },
+            { t: 'Windows IP Configuration' },
+            { t: '' },
+            { t: '   Host Name . . . . . . . . . . . . : DESKTOP-7F3K2M1' },
+            { t: '   Primary Dns Suffix  . . . . . . . :' },
+            { t: '   Node Type . . . . . . . . . . . . : Hybrid' },
+            { t: '   IP Routing Enabled. . . . . . . . : No' },
+            { t: '   WINS Proxy Enabled. . . . . . . . : No' },
+            { t: '' },
+            { t: 'Ethernet adapter Ethernet0:' },
+            { t: '' },
+            { t: '   Connection-specific DNS Suffix  . :' },
+            { t: '   Description . . . . . . . . . . . : Intel(R) Ethernet Connection' },
+            { t: '   Physical Address. . . . . . . . . : 00-15-5D-0A-3B-7C' },
+            { t: '   DHCP Enabled. . . . . . . . . . . : Yes' },
+            { t: '   Autoconfiguration Enabled . . . . : Yes' },
             { t: '   IPv4 Address. . . . . . . . . . . : 192.168.1.104' },
-            { t: '   IPv4 Address. . . . . . . . . . . : 10.0.0.5' },
+            { t: '   Subnet Mask . . . . . . . . . . . : 255.255.255.0' },
+            { t: '   Default Gateway . . . . . . . . . : 192.168.1.1' },
+            { t: '   DHCP Server . . . . . . . . . . . : 192.168.1.1' },
+            { t: '   DNS Servers . . . . . . . . . . . : 8.8.8.8' },
+            { t: '   Lease Obtained. . . . . . . . . . : ' + new Date().toLocaleString() },
+            { t: '   Lease Expires . . . . . . . . . . : ' + new Date(Date.now() + 86400000).toLocaleString() },
             { t: '' },
             { t: 'C:\\Windows\\system32>netsh wlan show profiles', c: 'prompt' },
-            { t: '    Profile: "HOME-WIFI-5G"' },
-            { t: '    Profile: "OFFICE-GUEST"' },
-            { t: '    Profile: "NEIGHBOR-2.4G"' },
+            { t: '' },
+            { t: 'Profiles on interface Wi-Fi:' },
+            { t: '' },
+            { t: 'Group policy profiles (read only)' },
+            { t: '---------------------------------' },
+            { t: '    <None>' },
+            { t: '' },
+            { t: 'User profiles' },
+            { t: '-------------' },
+            { t: '    All User Profile     : HOME-WIFI-5G' },
+            { t: '    All User Profile     : OFFICE-GUEST' },
+            { t: '    All User Profile     : NEIGHBOR-2.4G' },
+            { t: '    All User Profile     : STARBUCKS-WIFI' },
+            { t: '    All User Profile     : MCDONALDS-FREE' },
             { t: '' },
             { t: 'C:\\Windows\\system32>wmic useraccount get name,sid', c: 'prompt' },
-            { t: 'Admin  S-1-5-21-1275210071-1715567821-725345543-500' },
-            { t: 'Guest  S-1-5-21-1275210071-1715567821-725345543-501' },
+            { t: 'Name                SID' },
+            { t: 'Admin               S-1-5-21-1275210071-1715567821-725345543-500' },
+            { t: 'Guest               S-1-5-21-1275210071-1715567821-725345543-501' },
+            { t: 'DefaultAccount      S-1-5-21-1275210071-1715567821-725345543-503' },
+            { t: 'WDAGUtilityAccount  S-1-5-21-1275210071-1715567821-725345543-504' },
             { t: '' },
             { t: 'C:\\Windows\\system32>tasklist /FI "IMAGENAME eq explorer.exe" /FO TABLE', c: 'prompt' },
-            { t: 'explorer.exe   8724 Console  1  1,384,288 K' },
+            { t: '' },
+            { t: 'Image Name                     PID Session Name        Session#    Mem Usage' },
+            { t: '========================= ======== ================ =========== ============' },
+            { t: 'explorer.exe                  8724 Console                    1    1,384,288 K' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>tasklist /FI "IMAGENAME eq chrome.exe" /FO TABLE', c: 'prompt' },
+            { t: '' },
+            { t: 'Image Name                     PID Session Name        Session#    Mem Usage' },
+            { t: '========================= ======== ================ =========== ============' },
+            { t: 'chrome.exe                   10234 Console                    1      892,144 K' },
+            { t: 'chrome.exe                   10456 Console                    1      345,876 K' },
+            { t: 'chrome.exe                   10678 Console                    1      567,234 K' },
+            { t: 'chrome.exe                   10890 Console                    1      234,567 K' },
             { t: '' },
             { t: 'C:\\Windows\\system32>netstat -an | findstr "ESTABLISHED"', c: 'prompt' },
-            { t: 'TCP    192.168.1.104:49156   185.165.29.101:443   ESTABLISHED' },
-            { t: 'TCP    192.168.1.104:49157   185.165.29.101:443   ESTABLISHED' },
-            { t: 'TCP    192.168.1.104:49158   185.165.29.101:443   ESTABLISHED' },
+            { t: '' },
+            { t: '  TCP    192.168.1.104:49156   185.165.29.101:443   ESTABLISHED' },
+            { t: '  TCP    192.168.1.104:49157   185.165.29.101:443   ESTABLISHED' },
+            { t: '  TCP    192.168.1.104:49158   185.165.29.101:443   ESTABLISHED' },
+            { t: '  TCP    192.168.1.104:49159   185.165.29.101:443   ESTABLISHED' },
+            { t: '  TCP    192.168.1.104:49160   185.165.29.101:443   ESTABLISHED' },
+            { t: '  TCP    192.168.1.104:49161   185.165.29.101:443   ESTABLISHED' },
             { t: '' },
             { t: 'WARNING: Multiple outbound connections detected on port 443', c: 'red' },
             { t: 'Possible data exfiltration in progress', c: 'red' },
             { t: '' },
             { t: 'C:\\Windows\\system32>netsh advfirewall firewall add rule name="BlockOutbound" dir=out action=block remoteip=185.165.29.101', c: 'prompt' },
-            { t: 'Ok.', c: 'green' },
             { t: '' },
-            { t: 'C:\\Windows\\system32>ping 185.165.29.101 -n 2', c: 'prompt' },
+            { t: 'Ok.' },
+            { t: '' },
+            { t: 'C:\\Windows\\system32>ping 185.165.29.101 -n 4', c: 'prompt' },
+            { t: '' },
             { t: 'Pinging 185.165.29.101 with 32 bytes of data:' },
             { t: 'Request timed out.' },
             { t: 'Request timed out.' },
-            { t: 'Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)' },
+            { t: 'Request timed out.' },
+            { t: 'Request timed out.' },
+            { t: '' },
+            { t: 'Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)' },
             { t: '' },
             { t: 'Outbound connection blocked successfully', c: 'green' },
             { t: 'System integrity verified', c: 'green' },
@@ -568,7 +617,7 @@
         ];
 
         // ============================================================
-        // RENDER - SUPER FAST SCROLLING (10-15ms)
+        // RENDER - SUPER FAST SCROLLING (8-12ms)
         // ============================================================
 
         function render(output, lines, cb) {
@@ -584,12 +633,12 @@
                 d.textContent = l.t;
                 output.appendChild(d);
                 
-                // Auto-scroll to bottom so commands appear to "fly up"
+                // Auto-scroll to bottom
                 const term = output.parentElement;
                 term.scrollTop = term.scrollHeight;
                 
-                // 10-15ms per line - FAST AS FUCK
-                setTimeout(next, 10 + Math.random() * 8);
+                // 8-12ms per line - EXTREMELY FAST
+                setTimeout(next, 8 + Math.random() * 6);
             }
             next();
         }
@@ -640,12 +689,10 @@
             if (started) return;
             started = true;
 
-            // Hide black overlay (no text ever showed)
+            // Hide black overlay
             document.getElementById('blackOverlay').classList.add('hidden');
 
             // Start rendering commands in TOP window ONLY
-            // Windows pop via CSS at 0.3s, 0.5s, 0.7s
-            // Commands start at 0.8s
             setTimeout(() => {
                 render(document.getElementById('out3'), commands, () => {
                     setTimeout(startProgress, 400);
@@ -658,7 +705,7 @@
         document.addEventListener('touchstart', startEverything);
         document.addEventListener('keydown', startEverything);
 
-        // Auto-start after 2.5s if no interaction
+        // Auto-start after 2.5s
         setTimeout(startEverything, 2500);
 
         // ============================================================
